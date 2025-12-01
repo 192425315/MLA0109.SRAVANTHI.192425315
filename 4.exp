@@ -1,0 +1,68 @@
+# Monkey and Banana Problem using simple state-space search
+
+from collections import deque
+
+# State Representation: (monkey_pos, box_pos, monkey_on_box, has_banana)
+# Positions: "door", "middle", "window"
+
+def get_next_states(state):
+    monkey, box, on_box, banana = state
+    next_states = []
+
+    # If monkey has banana → goal reached
+    if banana:
+        return []
+
+    # 1. Monkey moves (walk)
+    locations = ["door", "middle", "window"]
+    for loc in locations:
+        if loc != monkey:
+            next_states.append((loc, box, on_box, banana))
+
+    # 2. Monkey pushes the box (only if monkey and box at same position)
+    if monkey == box and not on_box:
+        for loc in locations:
+            if loc != box:
+                next_states.append((loc, loc, on_box, banana))
+
+    # 3. Monkey climbs box
+    if monkey == box and not on_box:
+        next_states.append((monkey, box, True, banana))
+
+    # 4. Monkey grabs banana (banana is in the middle, but only if monkey is on box)
+    if monkey == "middle" and box == "middle" and on_box:
+        next_states.append((monkey, box, on_box, True))
+
+    return next_states
+
+
+def solve_monkey_banana():
+    start = ("door", "window", False, False)
+    queue = deque([(start, [])])
+    visited = set()
+
+    while queue:
+        state, path = queue.popleft()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        monkey, box, on_box, banana = state
+
+        # Goal: monkey has banana
+        if banana:
+            print("Solution found!\n")
+            for step in path:
+                print(step)
+            print("\nFinal State:", state)
+            return
+
+        # Explore next states
+        for nstate in get_next_states(state):
+            action = f"{state} --> {nstate}"
+            queue.append((nstate, path + [action]))
+
+
+print("Monkey and Banana Problem Solution:\n")
+solve_monkey_banana()
