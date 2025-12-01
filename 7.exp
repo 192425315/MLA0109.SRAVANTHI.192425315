@@ -1,0 +1,68 @@
+from collections import deque
+
+# Jug capacities
+A_CAP = 4   # 4-gallon jug
+B_CAP = 3   # 3-gallon jug
+
+# Goal state = 2 gallons in jug A
+GOAL = 2
+
+# BFS to search for solution
+def water_jug_bfs():
+    start = (0, 0)  # Both jugs empty
+    queue = deque([start])
+    visited = set([start])
+    parent = {start: None}
+    action = {start: "Start"}
+
+    while queue:
+        a, b = queue.popleft()
+
+        # Check goal
+        if a == GOAL:
+            return build_path((a, b), parent, action)
+
+        # All possible operations
+        next_states = {
+            (A_CAP, b): "Fill A (4-gallon) from pump",
+            (a, B_CAP): "Fill B (3-gallon) from pump",
+            (0, b): "Empty A onto ground",
+            (a, 0): "Empty B onto ground",
+            # Pour A → B
+            (a - min(a, B_CAP - b), b + min(a, B_CAP - b)): "Pour A → B",
+            # Pour B → A
+            (a + min(b, A_CAP - a), b - min(b, A_CAP - a)): "Pour B → A"
+        }
+
+        # Try all moves
+        for state, act in next_states.items():
+            if state not in visited:
+                visited.add(state)
+                parent[state] = (a, b)
+                action[state] = act
+                queue.append(state)
+
+    return None
+
+
+# Function to rebuild the path of actions
+def build_path(goal_state, parent, action):
+    path = []
+    state = goal_state
+    while state is not None:
+        path.append((state, action[state]))
+        state = parent[state]
+    path.reverse()
+    return path
+
+
+# Run BFS
+solution = water_jug_bfs()
+
+print("\n===== WATER JUG PROBLEM SOLUTION =====\n")
+print("Steps to get exactly 2 gallons in the 4-gallon jug:\n")
+
+for (state, act) in solution:
+    print(f"Action: {act:30} -> State: {state}")
+
+print("\nGoal achieved!")

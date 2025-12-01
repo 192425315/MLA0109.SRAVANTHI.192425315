@@ -1,0 +1,72 @@
+import heapq
+import math
+
+# Given graph with weights
+graph = {
+    'A': {'B': 1, 'C': 4},
+    'B': {'D': 3, 'E': 5},
+    'C': {'F': 2},
+    'D': {'F': 1, 'E': 1},
+    'E': {'F': 2},
+    'F': {}
+}
+
+# Heuristic values (straight-line estimates)
+# These are assumed for the graph — you can define any consistent values.
+heuristic = {
+    'A': 6,
+    'B': 5,
+    'C': 2,
+    'D': 3,
+    'E': 2,
+    'F': 0
+}
+
+def a_star(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (0, start))
+
+    g_cost = {node: float('inf') for node in graph}
+    g_cost[start] = 0
+
+    parent = {start: None}
+
+    expanded_order = []
+
+    while open_list:
+        f, current = heapq.heappop(open_list)
+
+        expanded_order.append(current)
+
+        if current == goal:
+            break
+
+        for neighbor, weight in graph[current].items():
+            tentative_g = g_cost[current] + weight
+            if tentative_g < g_cost[neighbor]:
+                g_cost[neighbor] = tentative_g
+                f_cost = tentative_g + heuristic[neighbor]
+                heapq.heappush(open_list, (f_cost, neighbor))
+                parent[neighbor] = current
+
+    # Backtrack to find path
+    path = []
+    node = goal
+    while node:
+        path.append(node)
+        node = parent[node]
+    path.reverse()
+
+    return expanded_order, path, g_cost[goal]
+
+
+# Run A* from A to F
+expanded, path, total_cost = a_star('A', 'F')
+
+print("\nORDER OF NODE EXPANSION:")
+print(" → ".join(expanded))
+
+print("\nFINAL OPTIMAL PATH:")
+print(" → ".join(path))
+
+print("\nTOTAL PATH COST:", total_cost)
