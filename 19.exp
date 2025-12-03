@@ -1,0 +1,72 @@
+from itertools import permutations
+
+def read_input():
+    # Number of cities
+    n = int(input("Enter number of cities: "))
+
+    # City names
+    print("Enter city names (one per line):")
+    cities = [input().strip() for _ in range(n)]
+
+    # Distance matrix
+    print("\nEnter the distance matrix (row-wise):")
+    print("(Use space-separated integers for each row)")
+    dist = []
+    for i in range(n):
+        row = list(map(int, input(f"Row {i+1}: ").split()))
+        if len(row) != n:
+            raise ValueError("Each row must have exactly", n, "values")
+        dist.append(row)
+
+    return cities, dist
+
+
+def tsp_bruteforce(cities, dist):
+    n = len(cities)
+    city_indices = list(range(n))
+
+    start = 0  # fix starting city to reduce duplicate tours
+    other_cities = [i for i in city_indices if i != start]
+
+    min_cost = float('inf')
+    best_path = None
+
+    # Generate all permutations of the remaining cities
+    for perm in permutations(other_cities):
+        path = [start] + list(perm) + [start]  # complete tour (return to start)
+
+        # Calculate cost of this path
+        cost = 0
+        valid = True
+        for i in range(len(path) - 1):
+            a = path[i]
+            b = path[i + 1]
+            d = dist[a][b]
+            if d == 0 and a != b:   # assume 0 means no direct path except diagonal
+                valid = False
+                break
+            cost += d
+
+        if valid and cost < min_cost:
+            min_cost = cost
+            best_path = path
+
+    return best_path, min_cost
+
+
+def main():
+    cities, dist = read_input()
+
+    best_path, min_cost = tsp_bruteforce(cities, dist)
+
+    if best_path is None:
+        print("No valid tour found.")
+    else:
+        print("\nOptimal tour:")
+        path_names = " -> ".join(cities[i] for i in best_path)
+        print(path_names)
+        print("Minimum total distance:", min_cost)
+
+
+if __name__ == "__main__":
+    main()
