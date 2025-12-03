@@ -1,0 +1,58 @@
+# Backward chaining implementation for Horn clauses
+
+# Knowledge Base
+KB = [
+    ("vertebrate", ["mammal"]),             # mammal(A) → vertebrate(A)
+    ("animal", ["vertebrate"]),             # vertebrate(A) → animal(A)
+    ("bird", ["vertebrate", "flying"]),     # vertebrate(A) ∧ flying(A) → bird(A)
+]
+
+# Facts
+facts = {
+    ("vertebrate", "duck"),
+    ("flying", "duck"),
+    ("mammal", "cat")
+}
+
+def prove(goal, entity, visited=None):
+    if visited is None:
+        visited = set()
+
+    # Base fact check
+    if (goal, entity) in facts:
+        return True
+
+    # Avoid loops
+    if (goal, entity) in visited:
+        return False
+
+    visited.add((goal, entity))
+
+    # Try rules that produce the goal
+    for head, body in KB:
+        if head == goal:
+            # All predicates in body must be proven
+            all_true = True
+            for predicate in body:
+                if not prove(predicate, entity, visited):
+                    all_true = False
+                    break
+            if all_true:
+                return True
+
+    return False
+
+
+# Test queries
+queries = [
+    ("animal", "duck"),
+    ("bird", "duck"),
+    ("animal", "cat"),
+    ("bird", "cat")
+]
+
+for q in queries:
+    goal, entity = q
+    print(f"Query: {goal}({entity}) ?")
+    result = prove(goal, entity)
+    print("Result:", "YES" if result else "NO", "\n")

@@ -1,0 +1,57 @@
+# Map Coloring using Backtracking
+
+# Function to check if assigning color c to node is safe
+def is_safe(graph, node, color, colors):
+    for neighbor in graph[node]:
+        if colors[neighbor] == color:   # Adjacent node already has same color
+            return False
+    return True
+
+
+# Backtracking function to color the graph
+def color_graph(graph, nodes, colors, color_list, index=0):
+    # If all nodes are colored
+    if index == len(nodes):
+        return True
+
+    node = nodes[index]
+
+    # Try assigning each color
+    for color in color_list:
+        if is_safe(graph, node, color, colors):
+            colors[node] = color
+
+            # Recur to color next node
+            if color_graph(graph, nodes, colors, color_list, index + 1):
+                return True
+
+            # Backtrack
+            colors[node] = None
+
+    return False
+
+
+# Example graph (map regions)
+graph = {
+    'A': ['B', 'C', 'D'],
+    'B': ['A', 'C'],
+    'C': ['A', 'B', 'D'],
+    'D': ['A', 'C']
+}
+
+# Available colors
+color_list = ['Red', 'Green', 'Blue']
+
+# Dictionary to store color of each region
+colors = {node: None for node in graph}
+
+# List of all nodes
+nodes = list(graph.keys())
+
+# Solve the coloring problem
+if color_graph(graph, nodes, colors, color_list):
+    print("Valid Coloring Found:")
+    for node in colors:
+        print(node, ":", colors[node])
+else:
+    print("No valid coloring found with given colors.")

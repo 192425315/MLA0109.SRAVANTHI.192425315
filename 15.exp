@@ -1,0 +1,126 @@
+import random
+
+# -------------------------------------------
+# Cost Function: Number of attacking pairs
+# -------------------------------------------
+
+def compute_cost(state):
+    cost = 0
+    n = len(state)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+
+            # same row attack
+            if state[i] == state[j]:
+                cost += 1
+
+            # diagonal attack
+            if abs(state[i] - state[j]) == abs(i - j):
+                cost += 1
+
+    return cost
+
+
+# -------------------------------------------
+# Generate Neighbors (move queen in each column)
+# -------------------------------------------
+
+def get_neighbors(state):
+    neighbors = []
+    n = len(state)
+
+    for col in range(n):
+        for row in range(n):
+            if row != state[col]:
+                new_state = state.copy()
+                new_state[col] = row
+                neighbors.append(new_state)
+
+    return neighbors
+
+
+# -------------------------------------------
+# Hill Climbing (Best-Improving)
+# -------------------------------------------
+
+def hill_climb(initial_state):
+    current = initial_state
+    current_cost = compute_cost(current)
+
+    while True:
+        neighbors = get_neighbors(current)
+        best_neighbor = None
+        best_cost = current_cost
+
+        # find best neighbor
+        for neighbor in neighbors:
+            cost = compute_cost(neighbor)
+            if cost < best_cost:
+                best_cost = cost
+                best_neighbor = neighbor
+
+        # if no improvement → stop
+        if best_neighbor is None:
+            return current, current_cost
+
+        # move to better neighbor
+        current = best_neighbor
+        current_cost = best_cost
+
+
+# -------------------------------------------
+# Random Restart Hill Climbing (Optional)
+# -------------------------------------------
+
+def solve_n_queens(n, restarts=1):
+    best_solution = None
+    best_cost = float("inf")
+
+    for r in range(restarts):
+        initial = [random.randint(0, n - 1) for _ in range(n)]
+        solution, cost = hill_climb(initial)
+
+        if cost < best_cost:
+            best_cost = cost
+            best_solution = solution
+
+        if cost == 0:
+            break  # found optimal solution
+
+    return best_solution, best_cost
+
+
+# -------------------------------------------
+# Print Board
+# -------------------------------------------
+
+def print_board(state):
+    n = len(state)
+    print("\nFinal Board:")
+    for r in range(n):
+        row = ""
+        for c in range(n):
+            row += "Q " if state[c] == r else ". "
+        print(row)
+    print()
+
+
+# -------------------------------------------
+# Main
+# -------------------------------------------
+
+if __name__ == "__main__":
+    n = int(input("Enter number of queens (N): "))
+    restarts = int(input("Enter number of random restarts: "))
+
+    solution, final_cost = solve_n_queens(n, restarts)
+
+    print_board(solution)
+    print("Final State:", solution)
+    print("Final Cost:", final_cost)
+
+    if final_cost == 0:
+        print("✔ Valid Solution Found!")
+    else:
+        print("✖ Local Optimum Reached (No perfect solution found)")

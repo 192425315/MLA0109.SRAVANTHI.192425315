@@ -1,0 +1,230 @@
+import copy
+import math
+import random
+
+# -----------------------------
+# Checkers Game Implementation
+# -----------------------------
+
+EMPTY = "."
+PLAYER1 = "r"   # human or AI 1
+PLAYER1_K = "R"
+PLAYER2 = "b"   # AI
+PLAYER2_K = "B"
+
+DIRECTIONS = {
+    PLAYER1: [(1, -1), (1, 1)],      # red moves down
+    PLAYER2: [(-1, -1), (-1, 1)],    # black moves up
+    PLAYER1_K: [(1, -1), (1, 1), (-1, -1), (-1, 1)],
+    PLAYER2_K: [(1, -1), (1, 1), (-1, -1), (-1, 1)]
+}
+
+class Checkers:
+    def __init__(self):
+        self.board = self.create_board()
+
+    def create_board(self):
+        board = []
+        for r in range(8):
+            row = []
+            for c in range(8):
+                if r < 3 and (r + c) % 2 == 1:
+                    row.append(PLAYER2)
+                elif r > 4 and (r + c) % 2 == 1:
+                    row.append(PLAYER1)
+                else:
+                    row.append(EMPTY)
+            board.append(row)
+        return board
+
+    def print_board(self):
+        print("\n   0 1 2 3 4 5 6 7")
+        print("  ----------------")
+        for r in range(8):
+            print(f"{r}|", " ".join(self.board[r]))
+        print()
+
+    def get_piece(self, r, c):
+        if 0 <= r < 8 and 0 <= c < 8:
+            return self.board[r][c]
+        return None
+
+    def is_king(self, piece):
+        return piece in (PLAYER1_K, PLAYER2_K)
+
+    def get_all_moves(self, player):
+        moves = []
+        captures = []
+
+        for r in range(8):
+            for c in range(8):
+                if self.board[r][c].lower() == player:
+                    new_moves, new_captures = self.get_piece_moves(r, c)
+                    moves.extend(new_moves)
+                    captures.extend(new_captures)
+
+        return captures if captures else moves
+
+    def get_piece_moves(self, r, c):
+        piece = self.board[r][c]
+        directions = DIRECTIONS[piece]
+        moves = []
+        captures = []
+
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+
+            # normal move
+            if self.get_piece(nr, nc) == EMPTY:
+                moves.append(((r, c), (nr, nc)))
+
+            # capture
+            nr2, nc2 = r + 2*dr, c + 2*dc
+            if (self.get_piece(nr, nc) not in [None, EMPTY] and 
+                self.get_piece(nr, nc).lower() != piece.lower() and
+                self.get_piece(nr2, nc2) == EMPTY):
+                captures.append(((r, c), (nr2, nc2)))
+
+        return moves, captures
+
+    def apply_move(self, move):
+        (r1, c1), (r2, c2) = move
+        piece = self.board[r1][c1]
+        self.board[r1][c1] = EMPTY
+        self.board[r2][c2] = piece
+
+        # capture removal
+        if abs(r2 - r1) == 2:
+            mid_r, mid_c = (r1 + r2) // 2, (c1 + c2) // 2
+            self.board[mid_r][mid_c] = EMPTY
+
+        # king promotion
+        if piece == PLAYER1 and r2 == 0:
+            self.board[r2][c2] = PLAYER1_K
+        if piece == PLAYER2 and r2 == 7:
+            self.board[r2][c2] = PLAYER2_K
+
+    def evaluate(self):
+        """Positive score = player1 advantage, negative = player2 advantage"""
+        score = 0
+        for r in range(8):
+            for c in range(8):
+                piece = self.board[r][c]
+                if piece == PLAYER1:
+                    score += 1
+                elif piece == PLAYER2:
+                    score -= 1
+                elif piece == PLAYER1_K:
+                    score += 2
+                elif piece == PLAYER2_K:
+                    score -= 2
+
+        return score
+
+    def is_terminal(self):
+        """Game over if either player has no moves."""
+        return not self.get_all_moves("r") or not self.get_all_moves("b")
+
+    # -----------------------------
+    # Minimax with Alpha–Beta
+    -----------------------------
+    def minimax(self, depth, alpha, beta, maximizing):
+        if depth == 0 or self.is_terminal():
+            return self.evaluate(), None
+
+        player = "r" if maximizing else "b"
+        moves = self.get_all_moves(player)
+
+        if not moves:
+            return self.evaluate(), None
+
+        best_move = random.choice(moves)
+
+        if maximizing:
+            max_eval = -math.inf
+            for move in moves:
+                temp = copy.deepcopy(self)
+                temp.apply_move(move)
+                eval_score, _ = temp.minimax(depth-1, alpha, beta, False)
+
+                if eval_score > max_eval:
+                    max_eval = eval_score
+                    best_move = move
+
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
+                    break
+            return max_eval, best_move
+
+        else:
+            min_eval = math.inf
+            for move in moves:
+                temp = copy.deepcopy(self)
+                temp.apply_move(move)
+                eval_score, _ = temp.minimax(depth-1, alpha, beta, True)
+
+                if eval_score < min_eval:
+                    min_eval = eval_score
+                    best_move = move
+
+                beta = min(beta, eval_score)
+                if beta <= alpha:
+                    break
+            return min_eval, best_move
+
+
+# -----------------------------
+# Game Loop
+# -----------------------------
+def play_game(mode="human_vs_ai"):
+    g = Checkers()
+
+    turn = "r"
+
+    while not g.is_terminal():
+        g.print_board()
+
+        if turn == "r":
+            print("Player RED's turn")
+
+            if mode == "human_vs_ai":
+                moves = g.get_all_moves("r")
+                print("Available moves:", moves)
+                r1, c1 = map(int, input("Select piece row col: ").split())
+                r2, c2 = map(int, input("Select target row col: ").split())
+                move = ((r1, c1), (r2, c2))
+                if move not in moves:
+                    print("Invalid move! Try again.")
+                    continue
+                g.apply_move(move)
+
+            else:  # AI vs AI
+                _, move = g.minimax(3, -math.inf, math.inf, True)
+                g.apply_move(move)
+
+        else:
+            print("Player BLACK (AI) thinking...")
+            _, move = g.minimax(3, -math.inf, math.inf, False)
+            g.apply_move(move)
+
+        turn = "b" if turn == "r" else "r"
+
+    # Winner
+    g.print_board()
+    if g.get_all_moves("r"):
+        print("RED WINS!")
+    else:
+        print("BLACK WINS!")
+
+
+# Run Game
+if __name__ == "__main__":
+    print("Modes:")
+    print("1. Human vs AI")
+    print("2. AI vs AI")
+    choice = input("Choose mode: ")
+
+    if choice == "1":
+        play_game("human_vs_ai")
+    else:
+        play_game("ai_vs_ai")

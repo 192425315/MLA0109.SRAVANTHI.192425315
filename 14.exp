@@ -1,0 +1,92 @@
+import math
+import time
+
+# ------------------------------------------
+# Environment Setup
+# ------------------------------------------
+
+class VacuumCleaner:
+    def __init__(self, grid, start):
+        self.grid = grid
+        self.x, self.y = start
+        self.steps = 0
+
+    def print_grid(self):
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[0])):
+                if (i, j) == (self.x, self.y):
+                    print("V", end=" ")   # vacuum location
+                else:
+                    print(self.grid[i][j], end=" ")
+            print()
+        print()
+
+    def find_dirty_cells(self):
+        dirty = []
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[0])):
+                if self.grid[i][j] == "D":
+                    dirty.append((i, j))
+        return dirty
+
+    def distance(self, a, b):
+        # Manhattan distance
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def move(self, target):
+        tx, ty = target
+
+        if self.x < tx:
+            self.x += 1
+        elif self.x > tx:
+            self.x -= 1
+        elif self.y < ty:
+            self.y += 1
+        elif self.y > ty:
+            self.y -= 1
+
+        self.steps += 1
+
+    def clean(self):
+        print("Starting Vacuum Cleaner...\n")
+
+        while True:
+            self.print_grid()
+            dirty = self.find_dirty_cells()
+
+            if not dirty:
+                print("All cells cleaned!")
+                print("Total steps taken =", self.steps)
+                break
+
+            # nearest dirty cell
+            target = min(dirty, key=lambda d: self.distance((self.x, self.y), d))
+
+            # move one step toward the target
+            self.move(target)
+
+            # if reached, clean it
+            if (self.x, self.y) == target:
+                print(f"Cleaning cell {target}...")
+                self.grid[self.x][self.y] = "C"  # cleaned
+            time.sleep(0.3)  # slow animation (optional)
+
+# ------------------------------------------
+# Example Grid (D = dirty, C = clean)
+# ------------------------------------------
+
+grid = [
+    ["C", "D", "C", "C"],
+    ["C", "C", "D", "C"],
+    ["D", "C", "C", "C"],
+    ["C", "C", "C", "D"]
+]
+
+start_position = (0, 0)  # vacuum starts at top-left
+
+# ------------------------------------------
+# Run the Vacuum Cleaner
+# ------------------------------------------
+
+vacuum = VacuumCleaner(grid, start_position)
+vacuum.clean()

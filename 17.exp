@@ -1,0 +1,40 @@
+# Minimax implementation for perfect binary tree
+
+def minimax(depth, node_index, is_max_player, values, max_depth):
+    # Base case: leaf node
+    if depth == max_depth:
+        return values[node_index]
+
+    if is_max_player:
+        return max(
+            minimax(depth + 1, node_index * 2, False, values, max_depth),
+            minimax(depth + 1, node_index * 2 + 1, False, values, max_depth)
+        )
+    else:
+        return min(
+            minimax(depth + 1, node_index * 2, True, values, max_depth),
+            minimax(depth + 1, node_index * 2 + 1, True, values, max_depth)
+        )
+
+
+# Leaf values of the tree
+values = [3, 5, 2, 9]
+
+# Height of the tree (leaf level depth = log2(4) = 2)
+max_depth = 2  
+
+best_value = minimax(0, 0, True, values, max_depth)
+
+print("Best possible value for the maximizing player:", best_value)
+
+# Decide which branch MAX will choose
+left_subtree = min(values[0], values[1])   # min(3,5) = 3
+right_subtree = min(values[2], values[3])  # min(2,9) = 2
+
+print("Left subtree value :", left_subtree)
+print("Right subtree value:", right_subtree)
+
+if left_subtree > right_subtree:
+    print("Maximizing player chooses: LEFT branch")
+else:
+    print("Maximizing player chooses: RIGHT branch")
