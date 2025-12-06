@@ -1,0 +1,80 @@
+# Decision Tree Classifier Program
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.metrics import accuracy_score
+
+# -----------------------------
+# 1. LOAD DATASET (Replace with your dataset)
+# -----------------------------
+
+# Example dataset (You can remove this and load your figure dataset instead)
+data = {
+    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain', 'Overcast', 'Sunny'],
+    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Mild', 'Mild'],
+    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal', 'High'],
+    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak'],
+    'PlayTennis': ['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'Yes']
+}
+
+df = pd.DataFrame(data)
+
+print("\nDataset Loaded:")
+print(df)
+
+# Convert categorical columns to numeric using one-hot encoding
+df_encoded = pd.get_dummies(df)
+
+# -----------------------------
+# 2. SPLIT INTO FEATURES & LABEL
+# -----------------------------
+X = df_encoded.drop('PlayTennis_Yes', axis=1)   # Feature matrix
+y = df_encoded['PlayTennis_Yes']                # Target label
+
+# Train-test split (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# -----------------------------
+# 3. BUILD DECISION TREE
+# -----------------------------
+model = DecisionTreeClassifier(criterion='entropy')
+model.fit(X_train, y_train)
+
+print("\nDecision Tree trained successfully!")
+
+# -----------------------------
+# 4. DISPLAY TREE STRUCTURE
+# -----------------------------
+tree_rules = export_text(model, feature_names=list(X.columns))
+print("\nDecision Tree Structure:")
+print(tree_rules)
+
+# -----------------------------
+# 5. CLASSIFY NEW INSTANCE
+# -----------------------------
+print("\nEnter a new instance to classify:")
+new_data = {
+    'Outlook': input("Outlook (Sunny/Overcast/Rain): "),
+    'Temperature': input("Temperature (Hot/Mild/Cool): "),
+    'Humidity': input("Humidity (High/Normal): "),
+    'Wind': input("Wind (Weak/Strong): ")
+}
+
+# One-hot encode new instance to match training data
+new_df = pd.DataFrame([new_data])
+new_df_encoded = pd.get_dummies(new_df)
+new_df_encoded = new_df_encoded.reindex(columns=X.columns, fill_value=0)
+
+prediction = model.predict(new_df_encoded)[0]
+print("\nPrediction for new instance:", "Yes" if prediction == 1 else "No")
+
+# -----------------------------
+# 6. MODEL ACCURACY
+# -----------------------------
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nModel Accuracy on Test Data:", round(accuracy * 100, 2), "%")
