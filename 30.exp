@@ -1,0 +1,45 @@
+# 30. Ontology subclass reasoning
+
+triples = [
+    ("Dog", "subClassOf", "Mammal"),
+    ("Cat", "subClassOf", "Mammal"),
+    ("Mammal", "subClassOf", "Animal"),
+    ("Animal", "subClassOf", "LivingThing"),
+    ("Car", "subClassOf", "Vehicle"),
+]
+
+# Build knowledge graph
+children = {}
+parent = {}
+
+for sub, rel, sup in triples:
+    if rel != "subClassOf":
+        continue
+    children.setdefault(sup, []).append(sub)
+    parent[sub] = sup
+
+def get_all_subclasses(cls):
+    result = []
+    stack = [cls]
+    while stack:
+        cur = stack.pop()
+        for ch in children.get(cur, []):
+            result.append(ch)
+            stack.append(ch)
+    return result
+
+def is_subclass(sub, sup):
+    cur = sub
+    while cur in parent:
+        if parent[cur] == sup:
+            return True
+        cur = parent[cur]
+    return False
+
+if __name__ == "__main__":
+    print("All subclasses of 'Mammal':", get_all_subclasses("Mammal"))
+    print("All subclasses of 'Animal':", get_all_subclasses("Animal"))
+
+    print("Is Dog a subclass of Animal?", is_subclass("Dog", "Animal"))
+    print("Is Cat a subclass of LivingThing?", is_subclass("Cat", "LivingThing"))
+    print("Is Car a subclass of Animal?", is_subclass("Car", "Animal"))

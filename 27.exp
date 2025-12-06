@@ -1,0 +1,95 @@
+# 27. Grid-World with Q-Learning
+
+import random
+
+ROWS, COLS = 5, 5
+start_state = (0, 0)
+goal_state = (4, 4)
+obstacles = {(1, 2), (3, 1)}
+step_penalty = -1
+goal_reward = 10
+obstacle_penalty = -10
+
+actions = ['U', 'D', 'L', 'R']
+
+alpha = 0.1      # learning rate
+gamma = 0.9      # discount
+epsilon = 0.2    # exploration
+EPISODES = 200
+
+def get_next_state(state, action):
+    r, c = state
+    if action == 'U':
+        r = max(0, r-1)
+    elif action == 'D':
+        r = min(ROWS-1, r+1)
+    elif action == 'L':
+        c = max(0, c-1)
+    elif action == 'R':
+        c = min(COLS-1, c+1)
+    return (r, c)
+
+def get_reward(state):
+    if state == goal_state:
+        return goal_reward
+    if state in obstacles:
+        return obstacle_penalty
+    return step_penalty
+
+Q = {}  # Q[(state, action)] = value
+
+def get_Q(state, action):
+    return Q.get((state, action), 0.0)
+
+def choose_action(state):
+    if random.random() < epsilon:
+        return random.choice(actions)
+    q_vals = [get_Q(state, a) for a in actions]
+    max_q = max(q_vals)
+    best_actions = [a for a, q in zip(actions, q_vals) if q == max_q]
+    return random.choice(best_actions)
+
+def train():
+    for _ in range(EPISODES):
+        state = start_state
+        for _ in range(100):  # max steps per episode
+            action = choose_action(state)
+            next_state = get_next_state(state, action)
+            reward = get_reward(next_state)
+            max_next_Q = max(get_Q(next_state, a) for a in actions)
+            old_Q = get_Q(state, action)
+
+            # Q-learning update
+            new_Q = old_Q + alpha * (reward + gamma * max_next_Q - old_Q)
+            Q[(state, action)] = new_Q
+
+            state = next_state
+            if state == goal_state:
+                break
+
+def extract_path():
+    state = start_state
+    path = [state]
+    visited = set()
+    while state != goal_state and len(path) < 100:
+        visited.add(state)
+        q_vals = [get_Q(state, a) for a in actions]
+        max_q = max(q_vals)
+        best_actions = [a for a, q in zip(actions, q_vals) if q == max_q]
+        action = random.choice(best_actions)
+        state = get_next_state(state, action)
+        if state in visited:
+            break
+        path.append(state)
+    return path
+
+if __name__ == "__main__":
+    train()
+    print("Learned Q-table (non-zero entries):")
+    for (s, a), v in Q.items():
+        if abs(v) > 1e-3:
+            print(f"State {s}, Action {a} -> {v:.2f}")
+
+    path = extract_path()
+    print("\nOptimal-ish path from start to goal:")
+    print(path)

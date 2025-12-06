@@ -1,0 +1,45 @@
+# 24. Expectiminimax demonstration
+
+class Node:
+    def __init__(self, node_type, children=None, probs=None, value=None, name=""):
+        self.type = node_type  # 'MAX', 'MIN', 'CHANCE', 'LEAF'
+        self.children = children or []
+        self.probs = probs     # for chance nodes
+        self.value = value     # for leaf nodes
+        self.name = name
+
+def expectiminimax(node):
+    if node.type == 'LEAF':
+        return node.value
+
+    if node.type == 'MAX':
+        return max(expectiminimax(c) for c in node.children)
+
+    if node.type == 'MIN':
+        return min(expectiminimax(c) for c in node.children)
+
+    if node.type == 'CHANCE':
+        return sum(p * expectiminimax(c) for p, c in zip(node.probs, node.children))
+
+# Build a small tree
+# Root MAX chooses between two actions, each leading to CHANCE
+leaf_a1 = Node('LEAF', value=5, name="A1")
+leaf_a2 = Node('LEAF', value=10, name="A2")
+chance1 = Node('CHANCE', children=[leaf_a1, leaf_a2], probs=[0.4, 0.6])
+
+leaf_b1 = Node('LEAF', value=7, name="B1")
+leaf_b2 = Node('LEAF', value=-2, name="B2")
+chance2 = Node('CHANCE', children=[leaf_b1, leaf_b2], probs=[0.7, 0.3])
+
+root = Node('MAX', children=[chance1, chance2], name="Root")
+
+if __name__ == "__main__":
+    v1 = expectiminimax(chance1)
+    v2 = expectiminimax(chance2)
+    root_value = expectiminimax(root)
+
+    print("Expected value if choose Action1:", v1)
+    print("Expected value if choose Action2:", v2)
+    print("Root (MAX) chooses:", "Action1" if v1 >= v2 else "Action2")
+    print("Root expected utility:", root_value)
+    print("Randomness affects choice by changing chance node probabilities.")

@@ -1,0 +1,56 @@
+# 25. Beam Search vs BFS
+
+from collections import deque
+
+graph = {
+    'S': ['A', 'B'],
+    'A': ['C', 'D'],
+    'B': ['E'],
+    'C': ['G'],
+    'D': ['G'],
+    'E': ['G'],
+    'G': []
+}
+
+heuristic = {  # straight-line style heuristic
+    'S': 3, 'A': 2, 'B': 2,
+    'C': 1, 'D': 1, 'E': 1,
+    'G': 0
+}
+
+def bfs(start, goal):
+    queue = deque([(start, [start])])
+    visited = set()
+    while queue:
+        node, path = queue.popleft()
+        if node == goal:
+            return path
+        if node in visited:
+            continue
+        visited.add(node)
+        for neigh in graph[node]:
+            queue.append((neigh, path + [neigh]))
+    return None
+
+def beam_search(start, goal, k=2):
+    beam = [(start, [start])]
+    visited = set()
+    while beam:
+        candidates = []
+        for node, path in beam:
+            if node == goal:
+                return path
+            for neigh in graph[node]:
+                if neigh not in visited:
+                    candidates.append((neigh, path + [neigh]))
+                    visited.add(neigh)
+        # keep only k best by heuristic
+        candidates.sort(key=lambda x: heuristic[x[0]])
+        beam = candidates[:k]
+    return None
+
+if __name__ == "__main__":
+    start, goal = 'S', 'G'
+    print("BFS path:", bfs(start, goal))
+    print("Beam Search path (k=2):", beam_search(start, goal, k=2))
+    print("BFS is complete, Beam is faster but may miss paths in other graphs.")

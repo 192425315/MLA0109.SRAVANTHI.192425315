@@ -1,0 +1,39 @@
+# 29. Trust and Reputation System
+
+import random
+
+providers = ["P1", "P2", "P3"]
+clients   = ["C1", "C2", "C3", "C4"]
+
+# trust_scores[(client, provider)] = score
+trust_scores = {(c, p): 0 for c in clients for p in providers}
+
+def simulate_interactions(num_interactions=20):
+    for _ in range(num_interactions):
+        c = random.choice(clients)
+        p = random.choice(providers)
+        # random quality: +1 positive, -1 negative
+        feedback = random.choice([1, 1, 1, -1])  # more chance for positive
+        trust_scores[(c, p)] += feedback
+
+def compute_reputation():
+    rep = {}
+    for p in providers:
+        scores = [trust_scores[(c, p)] for c in clients]
+        rep[p] = sum(scores) / len(scores)
+    return rep
+
+if __name__ == "__main__":
+    simulate_interactions()
+    reputation = compute_reputation()
+
+    print("Trust Scores:")
+    for (c, p), s in trust_scores.items():
+        print(f"Client {c} -> Provider {p}: {s}")
+
+    print("\nReputation:")
+    for p, r in reputation.items():
+        print(f"Provider {p}: {r:.2f}")
+
+    best_provider = max(reputation, key=reputation.get)
+    print(f"\nBest provider based on reputation: {best_provider}")

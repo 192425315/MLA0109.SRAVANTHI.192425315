@@ -1,0 +1,61 @@
+# 26. Sudoku CSP with Backtracking
+
+GRID_SIZE = 9
+
+puzzle = [
+    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+    [6, 0, 0, 1, 9, 5, 0, 0, 0],
+    [0, 9, 8, 0, 0, 0, 0, 6, 0],
+
+    [8, 0, 0, 0, 6, 0, 0, 0, 3],
+    [4, 0, 0, 8, 0, 3, 0, 0, 1],
+    [7, 0, 0, 0, 2, 0, 0, 0, 6],
+
+    [0, 6, 0, 0, 0, 0, 2, 8, 0],
+    [0, 0, 0, 4, 1, 9, 0, 0, 5],
+    [0, 0, 0, 0, 8, 0, 0, 7, 9],
+]
+
+def find_empty(grid):
+    for i in range(GRID_SIZE):
+        for j in range(GRID_SIZE):
+            if grid[i][j] == 0:
+                return i, j
+    return None
+
+def is_valid(grid, row, col, val):
+    # row
+    if any(grid[row][c] == val for c in range(GRID_SIZE)):
+        return False
+    # col
+    if any(grid[r][col] == val for r in range(GRID_SIZE)):
+        return False
+    # 3x3 box
+    br = (row // 3) * 3
+    bc = (col // 3) * 3
+    for r in range(br, br+3):
+        for c in range(bc, bc+3):
+            if grid[r][c] == val:
+                return False
+    return True
+
+def solve_sudoku(grid):
+    empty = find_empty(grid)
+    if not empty:
+        return True
+    r, c = empty
+    for val in range(1, 10):
+        if is_valid(grid, r, c, val):  # (c)
+            grid[r][c] = val
+            if solve_sudoku(grid):      # (b)
+                return True
+            grid[r][c] = 0
+    return False
+
+if __name__ == "__main__":
+    if solve_sudoku(puzzle):
+        print("Solved Sudoku:")
+        for row in puzzle:              # (d)
+            print(" ".join(str(x) for x in row))
+    else:
+        print("No solution exists.")

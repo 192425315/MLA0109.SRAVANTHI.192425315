@@ -1,0 +1,78 @@
+# -------------------------------------------------------------
+# Simulated Annealing for Simple Task Scheduling Problem
+# -------------------------------------------------------------
+
+import random
+import math
+
+# (a) Define tasks and time slots
+NUM_TASKS = 6
+NUM_SLOTS = 3
+SLOT_CAPACITY = 3   # max tasks allowed per slot
+
+tasks = list(range(NUM_TASKS))
+time_slots = list(range(NUM_SLOTS))
+
+# (b) A schedule = list where index = task, value = assigned slot
+def random_schedule():
+    return [random.choice(time_slots) for _ in tasks]
+
+# (c) Cost function: penalize if a slot exceeds capacity
+def cost(schedule):
+    slot_counts = {slot: 0 for slot in time_slots}
+    for t in schedule:
+        slot_counts[t] += 1
+
+    penalty = 0
+    for slot in slot_counts:
+        if slot_counts[slot] > SLOT_CAPACITY:
+            penalty += (slot_counts[slot] - SLOT_CAPACITY)
+
+    return penalty
+
+# (d) Generate neighbor solution (small random change)
+def neighbor(schedule):
+    new = schedule[:]
+    task_to_modify = random.randint(0, NUM_TASKS - 1)
+    new[task_to_modify] = random.choice(time_slots)
+    return new
+
+# Simulated Annealing Algorithm
+def simulated_annealing(T=100, cooling_rate=0.95, min_T=0.1):
+    current = random_schedule()
+    current_cost = cost(current)
+
+    best = current[:]
+    best_cost = current_cost
+
+    while T > min_T:
+        new = neighbor(current)
+        new_cost = cost(new)
+
+        ΔE = new_cost - current_cost
+
+        # (e) Accept better OR accept worse with probability
+        if ΔE < 0 or random.random() < math.exp(-ΔE / T):
+            current = new
+            current_cost = new_cost
+
+            # Update best found
+            if new_cost < best_cost:
+                best = new
+                best_cost = new_cost
+
+        # (f) Cooling schedule
+        T *= cooling_rate
+
+    return best, best_cost
+
+
+# Run the algorithm
+best_schedule, best_cost = simulated_annealing()
+
+# (g) Print output
+print("\n---- Best Schedule Found ----")
+for task, slot in enumerate(best_schedule):
+    print(f"Task {task} → Slot {slot}")
+
+print(f"\nCost = {best_cost}")

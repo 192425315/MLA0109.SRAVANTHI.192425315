@@ -1,0 +1,51 @@
+# 23. Bilateral Negotiation with Alternating Offers
+
+TOTAL_RESOURCE = 100
+delta1 = 0.95  # discount factor for Agent 1
+delta2 = 0.9   # discount factor for Agent 2
+MAX_ROUNDS = 10
+
+def utility(amount, delta, round_num):
+    return (delta ** round_num) * amount
+
+def propose(agent, round_num):
+    # simple strategy: start selfish, then move toward 50-50
+    base = 70 if agent == 1 else 30
+    shift = min(round_num * 5, 20)
+    if agent == 1:
+        a1_get = max(50, base - shift)
+    else:
+        a1_get = min(50, base + shift)
+    a1_get = max(0, min(TOTAL_RESOURCE, a1_get))
+    a2_get = TOTAL_RESOURCE - a1_get
+    return a1_get, a2_get
+
+def negotiate():
+    for r in range(MAX_ROUNDS):
+        proposer = 1 if r % 2 == 0 else 2
+        a1_share, a2_share = propose(proposer, r)
+        u1 = utility(a1_share, delta1, r)
+        u2 = utility(a2_share, delta2, r)
+
+        # Opponent accepts if they get at least 40 util
+        if proposer == 1:
+            opp_accepts = u2 >= 40
+        else:
+            opp_accepts = u1 >= 40
+
+        print(f"Round {r+1}, Agent {proposer} proposes: A1={a1_share}, A2={a2_share}, u1={u1:.2f}, u2={u2:.2f}")
+
+        if opp_accepts:
+            print("\nAgreement reached!")
+            return a1_share, a2_share, u1, u2, r+1
+
+    print("\nNo agreement reached.")
+    return None, None, None, None, None
+
+if __name__ == "__main__":
+    a1, a2, u1, u2, rnd = negotiate()
+    if rnd is not None:
+        print(f"\nFinal agreement at round {rnd}: A1={a1}, A2={a2}")
+        print(f"Utilities: Agent1={u1:.2f}, Agent2={u2:.2f}")
+        fairness = abs(a1 - a2)
+        print("Nash-like fair outcome?" , "Yes" if fairness <= 10 else "No")

@@ -1,0 +1,66 @@
+# 22. Uniform-Cost Search and Dijkstra
+
+import heapq
+
+graph = {
+    'A': [('B', 1), ('C', 4)],
+    'B': [('C', 2), ('D', 5)],
+    'C': [('D', 1)],
+    'D': []
+}
+
+def ucs(start, goal):
+    pq = [(0, start, [])]  # (cost, node, path)
+    visited = {}
+
+    while pq:
+        cost, node, path = heapq.heappop(pq)
+        if node in visited and visited[node] <= cost:
+            continue
+        visited[node] = cost
+        path = path + [node]
+
+        if node == goal:
+            return cost, path
+
+        for neigh, w in graph.get(node, []):  # (a)(b)
+            heapq.heappush(pq, (cost + w, neigh, path))
+    return float('inf'), []
+
+def dijkstra(start, goal):
+    pq = [(0, start)]
+    dist = {n: float('inf') for n in graph}
+    parent = {start: None}
+    dist[start] = 0
+
+    while pq:
+        cost, node = heapq.heappop(pq)
+        if cost > dist[node]:
+            continue
+        if node == goal:
+            break
+        for neigh, w in graph[node]:
+            nc = cost + w
+            if nc < dist[neigh]:
+                dist[neigh] = nc
+                parent[neigh] = node
+                heapq.heappush(pq, (nc, neigh))
+
+    path = []
+    cur = goal
+    if dist[goal] == float('inf'):
+        return float('inf'), []
+    while cur is not None:
+        path.append(cur)
+        cur = parent.get(cur)
+    path.reverse()
+    return dist[goal], path
+
+if __name__ == "__main__":
+    start, goal = 'A', 'D'
+    ucs_cost, ucs_path = ucs(start, goal)       # (c)(d)
+    dj_cost, dj_path = dijkstra(start, goal)    # (e)
+
+    print("UCS -> Cost:", ucs_cost, "Path:", ucs_path)
+    print("Dijkstra -> Cost:", dj_cost, "Path:", dj_path)
+    print("Optimality validated:", ucs_cost == dj_cost and ucs_path == dj_path)
